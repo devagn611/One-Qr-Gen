@@ -60,7 +60,8 @@ The UQ consists of key-value pairs separated by '&' characters. The basic struct
 Key Parameters
 Data: Simple Paragraph or texts
 Url: Website URLs or any type of URL
-Contact Card(Vcard): Contact card (Name, Number, Address, Organizations)
+For Payment QR Genaration
+New EndPoints
 Example Usage
 Here's an example of a complete UQ string:
 
