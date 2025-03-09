@@ -1,6 +1,6 @@
 <h1 align="center" id="title">QR Code Generator</h1>
 
-<p align="center"><img src="https://socialify.git.ci/devagn611/Qr_Code_Generator/image?font=KoHo&language=1&name=1&owner=1&pattern=Circuit%20Board&stargazers=1&theme=Auto" alt="Qr_Code_Generator" width="640" height="320" /></p>
+<p align="center"><img src="https://socialify.git.ci/devagn611/One-Qr-Gen/image?font=KoHo&language=1&name=1&owner=1&pattern=Circuit%20Board&stargazers=1&theme=Auto" alt="Qr_Code_Generator" width="640" height="320" /></p>
 
 <p id="description">I've included features in this project that make it possible you to generate a limitless number of UPI payment QR codes to accept payments from customers.</p>
 
@@ -50,11 +50,11 @@ The Unique QR is a standardized protocol for initiating and processing payments 
 UQ Structure
 The UQ consists of key-value pairs separated by '&' characters. The basic structure is:
 
-        1. /api/qrgen?data=Maniya Devagn
+        1. /api/v1/qrgen?data=Maniya Devagn
 
-        2. /api/qrgen?url=digitalindia.com
+        2. /api/v1/qrgen?url=digitalindia.com
 
-        3. /api/qrgen?name=modiji&phoneNum=1111111111&address=ontop&org=ankhandbharat
+        3. /api/v1/qrgen?name=modiji&phoneNum=1111111111&address=ontop&org=ankhandbharat
           
         
 Key Parameters
@@ -64,11 +64,10 @@ Contact Card(Vcard): Contact card (Name, Number, Address, Organizations)
 Example Usage
 Here's an example of a complete UQ string:
 
-            1. /api/qrgen?data=Maniya Devagn
+            1. /api/v1/upi?upiid=devagnmaniya611@oksbi&name=devagn
 
-            2. /api/qrgen?url=digitalindia.com
+            2. api/v1/upiac?acn={your Account Number}&ifsc={Bank Branch IFSC Code}&name={(OPTIONAL) NAME}
 
-            3. /api/qrgen?name=modiji&phoneNum=1111111111&address=ontop&org=ankhandbharat
         
 Important Notes
 Ensure all parameter values are properly URL-encoded.
