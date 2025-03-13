@@ -1,4 +1,3 @@
-
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -27,6 +26,11 @@ app.get('/', (req, res) => {
   res.redirect('https://multi-qr-code-generator.vercel.app/');
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+// Only start the server when running locally
+if (!process.env.VERCEL_ENV) {
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
+}
+
+export default app;
