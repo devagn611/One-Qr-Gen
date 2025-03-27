@@ -50,11 +50,11 @@ The Unique QR is a standardized protocol for initiating and processing payments 
 UQ Structure
 The UQ consists of key-value pairs separated by '&' characters. The basic structure is:
 
-        1. /api/v1/qrgen?data=Maniya Devagn
+        1. /api/v1/qrGen?data=Maniya Devagn
 
-        2. /api/v1/qrgen?url=digitalindia.com
+        2. /api/v1/qrGen?url=digitalindia.com
 
-        3. /api/v1/qrgen?name=modiji&phoneNum=1111111111&address=ontop&org=ankhandbharat
+        3. /api/v1/qrGen?name=modiji&phoneNum=1111111111&address=ontop&org=ankhandbharat
           
         
 Key Parameters
