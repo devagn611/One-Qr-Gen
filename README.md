@@ -8,6 +8,8 @@
 
 <h2>🚀 Demo</h2>
 
+[![Live Demo on Vercel](https://img.shields.io/badge/Vercel-Live%20Demo-blue)](https://one-qr-gen.vercel.app)
+
 <!-- [Click Here](https://unique-qr-generator.onrender.com) -->
 
 <!-- <h2>Project Screenshots:</h2>
