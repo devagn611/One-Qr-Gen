@@ -1,37 +1,89 @@
-import QRCodeStyling from "qr-code-styling";
 
-export async function styleQrCode(data) {
-  
-  const qrCode = new QRCodeStyling({
-    width: 300,      // Reduced size for faster rendering.
-    height: 300,
+import QRCodeStyling from "qr-code-styling";
+import { optimize } from "svgo";
+
+
+/**
+ * Generate a highly customizable, optimized, and lightweight QR code SVG.
+ * @param {string} data - The data to encode in the QR code.
+ * @param {object} options - Customization options (see below).
+ * Supported options:
+ *   width, height, type, dotsOptions, backgroundOptions, imageOptions,
+ *   cornersSquareOptions, cornersDotOptions, errorCorrectionLevel, margin, etc.
+ *   minify (boolean): If true, minifies the SVG output.
+ *   All qr-code-styling options are supported.
+ */
+export async function styleQrCode(data, options = {}) {
+  const {
+    minify = true,
+    errorCorrectionLevel = 'M',
+    width = 300,
+    height = 300,
+    ...rest
+  } = options;
+
+  const qrOptions = {
+    width,
+    height,
     type: "svg",
-    data: data,      // Use the provided UPI string.
+    data,
+    qrOptions: {
+      errorCorrectionLevel,
+    },
     dotsOptions: {
-      color: "#4267b2",
-      type: "rounded"
+      color: "#000000ff",
+      type: "rounded",
     },
     backgroundOptions: {
-      color: "#e9ebee"
+      color: "#ffffffff",
     },
-    // image: "data:image/svg+xml;base64,...", 
     imageOptions: {
       crossOrigin: "anonymous",
-      margin: 20
-    }
-  });
+      margin: 20,
+    },
+    ...rest,
+  };
 
-  // Append to a temporary container in our simulated DOM.
+  // Deep merge for nested options
+  if (rest.dotsOptions) {
+    qrOptions.dotsOptions = { ...qrOptions.dotsOptions, ...rest.dotsOptions };
+  }
+  if (rest.backgroundOptions) {
+    qrOptions.backgroundOptions = { ...qrOptions.backgroundOptions, ...rest.backgroundOptions };
+  }
+  if (rest.imageOptions) {
+    qrOptions.imageOptions = { ...qrOptions.imageOptions, ...rest.imageOptions };
+  }
+  if (rest.cornersSquareOptions) {
+    qrOptions.cornersSquareOptions = { ...qrOptions.cornersSquareOptions, ...rest.cornersSquareOptions };
+  }
+  if (rest.cornersDotOptions) {
+    qrOptions.cornersDotOptions = { ...qrOptions.cornersDotOptions, ...rest.cornersDotOptions };
+  }
+
+
+  const qrCode = new QRCodeStyling(qrOptions);
+
   const container = document.createElement("div");
   document.body.appendChild(container);
   qrCode.append(container);
 
-  // Retrieve the raw SVG data.
   const rawData = await qrCode.getRawData("svg");
+  let svgString;
   if (rawData instanceof Blob) {
     const buffer = Buffer.from(await rawData.arrayBuffer());
-    return buffer.toString("utf-8");
+    svgString = buffer.toString("utf-8");
   } else {
-    return rawData;
+    svgString = rawData;
   }
+
+  if (minify && typeof svgString === "string") {
+    try {
+      const result = optimize(svgString, { multipass: true });
+      if (result.data) return result.data;
+    } catch (e) {
+      return svgString;
+    }
+  }
+  return svgString;
 }

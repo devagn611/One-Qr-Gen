@@ -1,13 +1,16 @@
 import express from "express";
-import { qrGen } from "../../controller/qrGenVcard.js";
-import { createUpiCode } from "../../controller/qrGenUpi.js";
-import { createUpiCodeAccount } from "../../controller/qrGenAccount.js";
-
+import upiController from "../../controller/upi.js";
+import upiAccountController from "../../controller/upiAccount.js";
+import vcardController from "../../controller/vcard.js";
+import urlController from "../../controller/url.js";
+import uniqueController from "../../controller/unique.js";
 
 const router = express.Router();
 
-router.get('/qrGen', qrGen);
-router.get('/upi',createUpiCode)
-router.get('/upiac',createUpiCodeAccount)
+router.get('/upi', upiController);
+router.get('/upiaccount', upiAccountController);
+router.get('/vcard', vcardController);
+router.get('/url', urlController);
+router.get('/unique', uniqueController);
 
 export default router;
