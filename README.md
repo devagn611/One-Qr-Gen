@@ -79,10 +79,3 @@ Once the backend server is running and you have opened the frontend in your brow
 📄 **License**
 
 This project is licensed under the Mozilla Public License 2.0 (MPL-2.0). See the [LICENSE](LICENSE) file in the repository for more details.
-
-📞 **Contact**
-
-If you have any questions, suggestions, or feedback, feel free to reach out:
-
-- **GitHub Issues**: https://github.com/devagn611/One-Qr-Gen/issues
-- **Your Name/Email**: (Add your name or email here if desired)
