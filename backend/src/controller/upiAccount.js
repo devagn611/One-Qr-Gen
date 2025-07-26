@@ -6,15 +6,15 @@ global.document = dom.window.document;
 
 import { styleQrCode } from "../addon/styleQrCode.js";
 
-export async function createUpiCodeAccount(req, res) {
-  const { acn, ifsc, name } = req.query;
+export default async function createUpiCodeAccount(req, res) {
+  const { acn, ifsc, name, ...options } = req.query;
   try {
     // Build the UPI string.
     const upiACstring = `upi://pay?pa=${acn}@${ifsc}.ifsc.npci&pn=${name}&cu=INR`;
     console.log("Generated UPI string:", upiACstring);
     
     // Generate the styled QR code SVG using the UPI string.
-    const finalQr = await styleQrCode(upiACstring);
+    const finalQr = await styleQrCode(upiACstring, options);
     
     // Set response headers for an SVG response.
     res.setHeader("Content-Type", "image/svg+xml");

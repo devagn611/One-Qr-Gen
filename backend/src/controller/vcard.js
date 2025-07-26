@@ -1,36 +1,40 @@
+
 import QRCode from "qrcode";
+import { styleQrCode } from "../addon/styleQrCode.js";
+import { JSDOM } from "jsdom";
+const dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`);
+global.window = dom.window;
+global.document = dom.window.document;
 
 // ======================
 // Server-side QR code generation
 // ======================
-export async function qrGen(req, res) {
-
-  console.log("API triggered with query parameters:", req.query);
-  const { data, url, name, phoneNum, org, address } = req.query;
+export default async function qrGen(req, res) {
+  const {
+    name, 
+    email, 
+    phone,
+    ...options
+  } = req.query;
 
   try {
-    let qrData;
-    if (data) {
-      qrData = `${data}`;
-    } else if (url) {
-      qrData = `${url}`;
-    } else if (name || phoneNum || address || org) {
-      qrData = `BEGIN:VCARD
+    const vCardData = `BEGIN:VCARD
 VERSION:3.0
-FN:${name || ''}
-TEL:${phoneNum || ''}
-ADR:${address || ''}
-ORG:${org || ''}
+FN:${name}
+EMAIL:${email}
+TEL:${phone}
 END:VCARD`;
-    } else {
-      return res.status(400).send("Missing required data");
-    }
 
-    const qrCodeBuffer = await QRCode.toBuffer(qrData);
-    res.type("png").send(qrCodeBuffer);
+    console.log("Generated vCard data:", vCardData);
+
+    const finalQr = await styleQrCode(vCardData, options);
+
+    res.setHeader("Content-Type", "image/svg+xml");
+    res.send(finalQr);
+    console.log("vCard QR code created successfully");
   } catch (error) {
-    console.error("Error generating QR code:", error);
-    res.status(500).send("Error generating QR code");
+    console.error("Error generating vCard QR code:", error);
+    res.status(500).send({ message: "Error generating QR code", error: error.message });
   }
 }
 
@@ -41,12 +45,10 @@ END:VCARD`;
 
 // If not defined elsewhere, simple stubs for loader functions:
 export function showLoader() {
-  // Implement your loader display logic (e.g. show a spinner)
   console.log("Loader shown");
 }
 
 export function hideLoader() {
-  // Implement your loader hide logic
   console.log("Loader hidden");
 }
 
@@ -67,7 +69,7 @@ export function showInputFields(dataType) {
 export function generateQRCode(dataType) {
   const qrCodeElement = document.getElementById("qrCode");
   if (!qrCodeElement) return;
-  qrCodeElement.innerHTML = ""; // Clear existing QR code
+  qrCodeElement.innerHTML = ""; 
 
   if (dataType === "custom") {
     generateUPIQRCode();
