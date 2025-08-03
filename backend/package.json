@@ -1,6 +1,6 @@
 {
   "name": "qr-code-gen",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "author": "Devagn Maniya",
   "description": "A unique QR code generator web app",
   "main": "index.js",
