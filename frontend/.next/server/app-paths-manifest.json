@@ -1,9 +1,0 @@
-{
-  "/_not-found/page": "app/_not-found/page.js",
-  "/page": "app/page.js",
-  "/unique/page": "app/unique/page.js",
-  "/upi/page": "app/upi/page.js",
-  "/upiaccount/page": "app/upiaccount/page.js",
-  "/url/page": "app/url/page.js",
-  "/vcard/page": "app/vcard/page.js"
-}
