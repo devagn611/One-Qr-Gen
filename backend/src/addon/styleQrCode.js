@@ -1,7 +1,34 @@
-
 import QRCodeStyling from "qr-code-styling";
 import { optimize } from "svgo";
+import { initializeDOM } from "../utils/domSetup.js";
 
+// Ensure DOM is initialized
+initializeDOM();
+
+/**
+ * Deep merge objects
+ */
+function deepMerge(target, source) {
+  const output = { ...target };
+  if (isObject(target) && isObject(source)) {
+    Object.keys(source).forEach(key => {
+      if (isObject(source[key])) {
+        if (!(key in target)) {
+          Object.assign(output, { [key]: source[key] });
+        } else {
+          output[key] = deepMerge(target[key], source[key]);
+        }
+      } else {
+        Object.assign(output, { [key]: source[key] });
+      }
+    });
+  }
+  return output;
+}
+
+function isObject(item) {
+  return item && typeof item === 'object' && !Array.isArray(item);
+}
 
 /**
  * Generate a highly customizable, optimized, and lightweight QR code SVG.
@@ -14,6 +41,10 @@ import { optimize } from "svgo";
  *   All qr-code-styling options are supported.
  */
 export async function styleQrCode(data, options = {}) {
+  if (!data || typeof data !== 'string') {
+    throw new Error('Data must be a non-empty string');
+  }
+
   const {
     minify = true,
     errorCorrectionLevel = 'M',
@@ -22,13 +53,14 @@ export async function styleQrCode(data, options = {}) {
     ...rest
   } = options;
 
-  const qrOptions = {
-    width,
-    height,
+  // Default options
+  const defaultOptions = {
+    width: Number(width) || 300,
+    height: Number(height) || 300,
     type: "svg",
     data,
     qrOptions: {
-      errorCorrectionLevel,
+      errorCorrectionLevel: errorCorrectionLevel || 'M',
     },
     dotsOptions: {
       color: "#000000ff",
@@ -41,49 +73,63 @@ export async function styleQrCode(data, options = {}) {
       crossOrigin: "anonymous",
       margin: 20,
     },
-    ...rest,
   };
 
-  // Deep merge for nested options
-  if (rest.dotsOptions) {
-    qrOptions.dotsOptions = { ...qrOptions.dotsOptions, ...rest.dotsOptions };
-  }
-  if (rest.backgroundOptions) {
-    qrOptions.backgroundOptions = { ...qrOptions.backgroundOptions, ...rest.backgroundOptions };
-  }
-  if (rest.imageOptions) {
-    qrOptions.imageOptions = { ...qrOptions.imageOptions, ...rest.imageOptions };
-  }
-  if (rest.cornersSquareOptions) {
-    qrOptions.cornersSquareOptions = { ...qrOptions.cornersSquareOptions, ...rest.cornersSquareOptions };
-  }
-  if (rest.cornersDotOptions) {
-    qrOptions.cornersDotOptions = { ...qrOptions.cornersDotOptions, ...rest.cornersDotOptions };
-  }
+  // Deep merge user options with defaults
+  const qrOptions = deepMerge(defaultOptions, rest);
 
+  // Ensure numeric values
+  if (qrOptions.width) qrOptions.width = Number(qrOptions.width);
+  if (qrOptions.height) qrOptions.height = Number(qrOptions.height);
 
   const qrCode = new QRCodeStyling(qrOptions);
 
+  // Use a temporary container that we can clean up
   const container = document.createElement("div");
+  container.style.position = 'absolute';
+  container.style.left = '-9999px';
   document.body.appendChild(container);
-  qrCode.append(container);
+  
+  try {
+    qrCode.append(container);
 
-  const rawData = await qrCode.getRawData("svg");
-  let svgString;
-  if (rawData instanceof Blob) {
-    const buffer = Buffer.from(await rawData.arrayBuffer());
-    svgString = buffer.toString("utf-8");
-  } else {
-    svgString = rawData;
-  }
-
-  if (minify && typeof svgString === "string") {
-    try {
-      const result = optimize(svgString, { multipass: true });
-      if (result.data) return result.data;
-    } catch (e) {
-      return svgString;
+    const rawData = await qrCode.getRawData("svg");
+    let svgString;
+    
+    if (rawData instanceof Blob) {
+      const buffer = Buffer.from(await rawData.arrayBuffer());
+      svgString = buffer.toString("utf-8");
+    } else {
+      svgString = rawData;
     }
+
+    // Clean up container
+    if (container.parentNode) {
+      container.parentNode.removeChild(container);
+    }
+
+    if (minify && typeof svgString === "string") {
+      try {
+        const result = optimize(svgString, { 
+          multipass: true,
+          plugins: [
+            'preset-default',
+            { name: 'removeViewBox', active: false }
+          ]
+        });
+        if (result.data) return result.data;
+      } catch (e) {
+        console.warn('SVG optimization failed:', e.message);
+        return svgString;
+      }
+    }
+    
+    return svgString;
+  } catch (error) {
+    // Clean up on error
+    if (container.parentNode) {
+      container.parentNode.removeChild(container);
+    }
+    throw error;
   }
-  return svgString;
 }

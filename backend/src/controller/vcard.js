@@ -1,40 +1,77 @@
-
-import QRCode from "qrcode";
 import { styleQrCode } from "../addon/styleQrCode.js";
-import { JSDOM } from "jsdom";
-const dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`);
-global.window = dom.window;
-global.document = dom.window.document;
+import { parseNestedQuery } from "../utils/queryParser.js";
+import { initializeDOM } from "../utils/domSetup.js";
+
+// Ensure DOM is initialized
+initializeDOM();
 
 // ======================
 // Server-side QR code generation
 // ======================
 export default async function qrGen(req, res) {
-  const {
-    name, 
-    email, 
-    phone,
-    ...options
-  } = req.query;
-
   try {
+    const {
+      name, 
+      email, 
+      phone,
+      ...rawOptions
+    } = req.query;
+
+    // Validate required parameters
+    if (!name || !email || !phone) {
+      return res.status(400).json({ 
+        message: "All parameters 'name', 'email', and 'phone' are required",
+        error: "Missing required parameters"
+      });
+    }
+
+    // Validate input lengths
+    if (name.length > 100 || email.length > 255 || phone.length > 20) {
+      return res.status(400).json({ 
+        message: "Invalid parameter lengths: name (max 100), email (max 255), phone (max 20)"
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ 
+        message: "Invalid email format"
+      });
+    }
+
+    // Validate phone format (basic validation)
+    const phoneRegex = /^[\d\s\-\+\(\)]+$/;
+    if (!phoneRegex.test(phone)) {
+      return res.status(400).json({ 
+        message: "Invalid phone format"
+      });
+    }
+
+    // Parse nested query parameters
+    const options = parseNestedQuery(rawOptions);
+
+    // Escape special characters in vCard data
+    const escapeVCard = (str) => str.replace(/[;,\\]/g, '\\$&');
+    
     const vCardData = `BEGIN:VCARD
 VERSION:3.0
-FN:${name}
-EMAIL:${email}
-TEL:${phone}
+FN:${escapeVCard(name)}
+EMAIL:${escapeVCard(email)}
+TEL:${escapeVCard(phone)}
 END:VCARD`;
-
-    console.log("Generated vCard data:", vCardData);
 
     const finalQr = await styleQrCode(vCardData, options);
 
     res.setHeader("Content-Type", "image/svg+xml");
+    res.setHeader("Cache-Control", "public, max-age=3600"); // Cache for 1 hour
     res.send(finalQr);
-    console.log("vCard QR code created successfully");
   } catch (error) {
     console.error("Error generating vCard QR code:", error);
-    res.status(500).send({ message: "Error generating QR code", error: error.message });
+    res.status(500).json({ 
+      message: "Error generating QR code", 
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
   }
 }
 

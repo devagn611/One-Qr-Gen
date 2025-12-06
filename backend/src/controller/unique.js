@@ -1,28 +1,39 @@
 import { styleQrCode } from "../addon/styleQrCode.js";
-import { JSDOM } from "jsdom";
+import { parseNestedQuery } from "../utils/queryParser.js";
+import { initializeDOM } from "../utils/domSetup.js";
 
-const dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`);
-global.window = dom.window;
-global.document = dom.window.document;
+// Ensure DOM is initialized
+initializeDOM();
 
 export default async function qrGen(req, res) {
-  const { text, ...options } = req.query;
-
-  if (!text) {
-    return res.status(400).send({ message: "Text is required" });
-  }
-
-  if (text.length > 500) {
-    return res.status(400).send({ message: "Text cannot be longer than 500 characters" });
-  }
-
   try {
+    const { text, ...rawOptions } = req.query;
+
+    if (!text) {
+      return res.status(400).json({ 
+        message: "Text is required",
+        error: "Missing required parameter"
+      });
+    }
+
+    if (text.length > 500) {
+      return res.status(400).json({ 
+        message: "Text cannot be longer than 500 characters"
+      });
+    }
+
+    // Parse nested query parameters
+    const options = parseNestedQuery(rawOptions);
+
     const finalQr = await styleQrCode(text, options);
     res.setHeader("Content-Type", "image/svg+xml");
+    res.setHeader("Cache-Control", "public, max-age=3600"); // Cache for 1 hour
     res.send(finalQr);
-    console.log("Unique QR code created successfully");
   } catch (error) {
     console.error("Error generating unique QR code:", error);
-    res.status(500).send({ message: "Error generating QR code", error: error.message });
+    res.status(500).json({ 
+      message: "Error generating QR code", 
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
   }
 }
