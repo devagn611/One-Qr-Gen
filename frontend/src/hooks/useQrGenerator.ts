@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import { useDebouncedCallback } from "use-debounce";
 import { apiUrl } from "@/utils/api";
 import { StylingOptionsData } from "@/components/StylingOptions";
 
@@ -10,8 +11,17 @@ type QrCodeData = StylingOptionsData & {
 export function useQrGenerator() {
   const [qrResult, setQrResult] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);
+  const abortControllerRef = React.useRef<AbortController | null>(null);
 
-  const handleSubmit = async (endpoint: string, data: QrCodeData) => {
+  const generateQr = React.useCallback(async (endpoint: string, data: QrCodeData) => {
+    // Cancel any pending request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new abort controller for this request
+    abortControllerRef.current = new AbortController();
+
     setLoading(true);
     setQrResult(null);
     try {
@@ -36,11 +46,16 @@ export function useQrGenerator() {
         headers: {
           Accept: "image/png",
         },
+        signal: abortControllerRef.current.signal,
       });
       if (!res.ok) throw new Error("Failed to generate QR");
       const blob = await res.blob();
       setQrResult(URL.createObjectURL(blob));
     } catch (e: unknown) {
+      // Ignore abort errors
+      if (e instanceof Error && e.name === 'AbortError') {
+        return;
+      }
       if (e instanceof Error) {
         console.error(e.message);
       } else {
@@ -50,7 +65,14 @@ export function useQrGenerator() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Debounce the QR generation with 300ms delay
+  const debouncedGenerateQr = useDebouncedCallback(generateQr, 300);
+
+  const handleSubmit = React.useCallback((endpoint: string, data: QrCodeData) => {
+    debouncedGenerateQr(endpoint, data);
+  }, [debouncedGenerateQr]);
 
   return { qrResult, loading, handleSubmit };
 }
