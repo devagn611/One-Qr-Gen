@@ -20,11 +20,11 @@ export interface UpiFormData {
 interface UpiFormProps {
   onSubmit: (data: UpiFormData) => void;
   loading: boolean;
-  qrResult: string | null;
+  qrResult?: string | null;
   onDownload: () => void;
 }
 
-export default function UpiForm({ onSubmit, loading, qrResult, onDownload }: UpiFormProps) {
+export default function UpiForm({ onSubmit, loading, onDownload }: UpiFormProps) {
   const [upiId, setUpiId] = React.useState("");
   const [name, setName] = React.useState("");
   const [styling, setStyling] = React.useState<StylingOptionsData>({
